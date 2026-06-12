@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=800, height=480, initial-scale=1.0">
+<title>World Cup Weekly</title>
+<style>
+  body {
+    margin: 0;
+    width: 800px;
+    height: 480px;
+    font-family: Arial, sans-serif;
+    background: white;
+    color: black;
+    overflow: hidden;
+  }
+  h1 {
+    margin: 6px 0;
+    text-align: center;
+    font-size: 24px;
+  }
+  .week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    padding: 4px;
+  }
+  .day {
+    border: 2px solid #39ff14;
+    border-radius: 10px;
+    height: 420px;
+    overflow: hidden;
+    font-size: 11px;
+  }
+  .day h2 {
+    margin: 0;
+    padding: 4px;
+    background: #39ff14;
+    color: black;
+    font-size: 13px;
+    text-align: center;
+  }
+  .match {
+    padding: 4px 2px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+  }
+  .team {
+    color: red;
+  }
+  .time {
+    font-size: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>FIFA World Cup 2026 - This Week</h1>
+<div class="week" id="week"></div>
+
+<script>
+const matches = [
+  {date:"2026-06-12", time:"03:00", home:"MEX", away:"RSA"},
+  {date:"2026-06-12", time:"10:00", home:"KOR", away:"CZE"},
+  {date:"2026-06-13", time:"03:00", home:"CAN", away:"IRH"},
+  {date:"2026-06-13", time:"09:00", home:"USA", away:"PAR"},
+  {date:"2026-06-14", time:"03:00", home:"QAT", away:"SUI"},
+  {date:"2026-06-14", time:"06:00", home:"BRA", away:"MAR"},
+  {date:"2026-06-14", time:"09:00", home:"HAI", away:"SCO"},
+  {date:"2026-06-14", time:"12:00", home:"AUS", away:"TUR"},
+  {date:"2026-06-15", time:"11:00", home:"GER", away:"CUW"},
+  {date:"2026-06-15", time:"03:00", home:"NED", away:"JPN"}
+];
+
+const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const weekDiv = document.getElementById("week");
+
+function getMonday(d) {
+  d = new Date(d);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
+
+const monday = getMonday(new Date());
+
+for (let i = 0; i < 7; i++) {
+  const current = new Date(monday);
+  current.setDate(monday.getDate() + i);
+  const dateStr = current.toISOString().split("T")[0];
+
+  const box = document.createElement("div");
+  box.className = "day";
+  box.innerHTML = `<h2>${days[i]} ${current.getDate()}/${current.getMonth()+1}</h2>`;
+
+  const todaysMatches = matches.filter(m => m.date === dateStr);
+
+  if (todaysMatches.length === 0) {
+    box.innerHTML += `<div class="match">no matches</div>`;
+  } else {
+    todaysMatches.forEach(m => {
+      box.innerHTML += `
+        <div class="match">
+          <span class="team">${m.home}</span> -- <span class="team">${m.away}</span><br>
+          <span class="time">${m.time}</span>
+        </div>`;
+    });
+  }
+
+  weekDiv.appendChild(box);
+}
+</script>
+
+</body>
+</html>
