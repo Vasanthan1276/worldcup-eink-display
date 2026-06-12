@@ -6,83 +6,78 @@
 <title>World Cup Weekly</title>
 
 <style>
-  body {
-    margin: 0;
-    width: 800px;
-    height: 480px;
-    font-family: Arial, sans-serif;
-    background: white;
-    color: black;
-    overflow: hidden;
-  }
+body {
+  margin: 0;
+  width: 800px;
+  height: 480px;
+  font-family: Arial, sans-serif;
+  background: white;
+  color: black;
+  overflow: hidden;
+}
 
-  h1 {
-    margin: 6px 0 2px 0;
-    text-align: center;
-    font-size: 23px;
-  }
+h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 24px;
+  line-height: 30px;
+}
 
-  .sub {
-    text-align: center;
-    font-size: 10px;
-    margin-bottom: 3px;
-  }
+.sub {
+  text-align: center;
+  font-size: 9px;
+  margin-bottom: 6px;
+}
 
-  .week {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 3px;
-    padding: 4px;
-  }
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  padding: 0 4px;
+}
 
-  .day {
-    border: 2px solid #39ff14;
-    border-radius: 10px;
-    height: 410px;
-    overflow: hidden;
-    font-size: 10px;
-  }
+.day {
+  border: 2px solid #39ff14;
+  border-radius: 8px;
+  height: 410px;
+  overflow: hidden;
+  font-size: 10px;
+}
 
-  .day h2 {
-    margin: 0;
-    padding: 4px 1px;
-    background: #39ff14;
-    color: black;
-    font-size: 12px;
-    text-align: center;
-  }
+.day h2 {
+  margin: 0;
+  padding: 4px 1px;
+  background: #39ff14;
+  color: black;
+  font-size: 12px;
+  text-align: center;
+}
 
-  .match {
-    padding: 4px 2px;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-    font-weight: bold;
-    line-height: 1.15;
-  }
+.match {
+  padding: 5px 2px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+  font-weight: bold;
+  line-height: 1.15;
+}
 
-  .team {
-    color: red;
-  }
+.team {
+  color: red;
+}
 
-  .time {
-    font-size: 10px;
-  }
+.time {
+  font-size: 10px;
+}
 
-  .score {
-    font-size: 14px;
-    color: black;
-  }
+.score {
+  font-size: 15px;
+  color: black;
+}
 
-  .ft {
-    font-size: 9px;
-    color: #444;
-  }
-
-  .error {
-    text-align: center;
-    font-size: 11px;
-    margin-top: 30px;
-  }
+.ft {
+  font-size: 9px;
+  color: #444;
+}
 </style>
 </head>
 
@@ -94,33 +89,31 @@
 
 <script>
 /*
-  FREE API SECTION
+  FREE AUTO-UPDATE SOURCE
 
-  Replace API_URL below with the live endpoint from:
-  https://github.com/rezarahiminia/worldcup2026
-
-  The code will still work using the manual fallback data below
-  if the API is unavailable or blocked by CORS.
+  This uses OpenFootball public JSON data.
+  Scores will update automatically only when the source JSON is updated.
+  If the source is unavailable, the page will use fallbackMatches.
 */
 
-const API_URL = ""; 
-// Example only: const API_URL = "https://your-free-worldcup-api-endpoint/matches";
+const API_URLS = [
+  "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
+  "https://raw.githubusercontent.com/openfootball/worldcup.json/main/2026/worldcup.json"
+];
 
 /*
-  Fallback match data.
-  Time below is already entered as Singapore time.
-  For completed games, use:
-  status:"FT", homeScore:1, awayScore:0
-
-  For upcoming games, use:
-  status:"UPCOMING"
+  Manual fallback data.
+  These are Singapore-time entries.
+  This is only used if the free JSON source cannot be loaded.
 */
 
 const fallbackMatches = [
   {date:"2026-06-12", time:"03:00", home:"MEX", away:"RSA", status:"UPCOMING"},
   {date:"2026-06-12", time:"10:00", home:"KOR", away:"CZE", status:"UPCOMING"},
+
   {date:"2026-06-13", time:"03:00", home:"CAN", away:"IRH", status:"UPCOMING"},
   {date:"2026-06-13", time:"09:00", home:"USA", away:"PAR", status:"UPCOMING"},
+
   {date:"2026-06-14", time:"03:00", home:"QAT", away:"SUI", status:"UPCOMING"},
   {date:"2026-06-14", time:"06:00", home:"BRA", away:"MAR", status:"UPCOMING"},
   {date:"2026-06-14", time:"09:00", home:"HAI", away:"SCO", status:"UPCOMING"},
@@ -138,6 +131,40 @@ const fallbackMatches = [
 
 const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const weekDiv = document.getElementById("week");
+
+const teamCodeMap = {
+  "Argentina":"ARG",
+  "Brazil":"BRA",
+  "England":"ENG",
+  "France":"FRA",
+  "Germany":"GER",
+  "Netherlands":"NED",
+  "Spain":"ESP",
+  "United States":"USA",
+  "USA":"USA",
+  "Japan":"JPN",
+  "Mexico":"MEX",
+  "South Africa":"RSA",
+  "Korea Republic":"KOR",
+  "South Korea":"KOR",
+  "Czech Republic":"CZE",
+  "Czechia":"CZE",
+  "Canada":"CAN",
+  "Iran":"IRN",
+  "Qatar":"QAT",
+  "Switzerland":"SUI",
+  "Morocco":"MAR",
+  "Haiti":"HAI",
+  "Scotland":"SCO",
+  "Australia":"AUS",
+  "Turkey":"TUR",
+  "Curaçao":"CUW",
+  "Curacao":"CUW",
+  "Cape Verde":"CPV",
+  "Senegal":"SEN",
+  "Croatia":"CRO",
+  "Sweden":"SWE"
+};
 
 function getSingaporeDate() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" }));
@@ -159,37 +186,181 @@ function formatDateLocal(date) {
   return `${y}-${m}-${d}`;
 }
 
-function normaliseApiMatches(apiData) {
-  /*
-    This attempts to map common API structures.
-    If the free API uses different field names, adjust this section only.
-  */
-  return apiData.map(m => {
+function toSingaporeDateTime(dateTimeText) {
+  const d = new Date(dateTimeText);
+
+  if (isNaN(d.getTime())) {
+    return { date: "", time: "" };
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Singapore",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(d);
+
+  const get = type => parts.find(p => p.type === type).value;
+
+  return {
+    date: `${get("year")}-${get("month")}-${get("day")}`,
+    time: `${get("hour")}:${get("minute")}`
+  };
+}
+
+function getTeamCode(team) {
+  if (!team) return "TBD";
+
+  if (typeof team === "string") {
+    return teamCodeMap[team] || team.substring(0, 3).toUpperCase();
+  }
+
+  if (team.code) return team.code;
+  if (team.key) return team.key.toUpperCase();
+  if (team.name) return teamCodeMap[team.name] || team.name.substring(0, 3).toUpperCase();
+
+  return "TBD";
+}
+
+function getScore(match) {
+  if (match.score) {
+    if (Array.isArray(match.score.ft)) {
+      return {
+        homeScore: match.score.ft[0],
+        awayScore: match.score.ft[1]
+      };
+    }
+
+    if (Array.isArray(match.score)) {
+      return {
+        homeScore: match.score[0],
+        awayScore: match.score[1]
+      };
+    }
+
+    if (typeof match.score === "object") {
+      return {
+        homeScore: match.score.home ?? match.score.homeScore ?? match.score.team1 ?? null,
+        awayScore: match.score.away ?? match.score.awayScore ?? match.score.team2 ?? null
+      };
+    }
+  }
+
+  return {
+    homeScore: match.homeScore ?? match.home_score ?? match.score1 ?? match.goals1 ?? null,
+    awayScore: match.awayScore ?? match.away_score ?? match.score2 ?? match.goals2 ?? null
+  };
+}
+
+function flattenMatches(data) {
+  if (Array.isArray(data)) return data;
+
+  if (Array.isArray(data.matches)) return data.matches;
+
+  if (Array.isArray(data.rounds)) {
+    return data.rounds.flatMap(round => round.matches || []);
+  }
+
+  if (Array.isArray(data.data)) return data.data;
+
+  return [];
+}
+
+function normaliseMatches(data) {
+  const rawMatches = flattenMatches(data);
+
+  return rawMatches.map(match => {
+    let date = "";
+    let time = "";
+
+    const possibleDateTime =
+      match.datetime ||
+      match.dateTime ||
+      match.utcDate ||
+      match.kickoff ||
+      match.kickoff_at ||
+      match.fixture?.date;
+
+    if (possibleDateTime) {
+      const sg = toSingaporeDateTime(possibleDateTime);
+      date = sg.date;
+      time = sg.time;
+    } else {
+      date = match.date || match.match_date || "";
+      time = match.time || match.kickoff_time || "TBC";
+    }
+
+    const home = getTeamCode(
+      match.team1 ||
+      match.home ||
+      match.home_team ||
+      match.teams?.home
+    );
+
+    const away = getTeamCode(
+      match.team2 ||
+      match.away ||
+      match.away_team ||
+      match.teams?.away
+    );
+
+    const score = getScore(match);
+
+    const hasScore =
+      score.homeScore !== null &&
+      score.homeScore !== undefined &&
+      score.awayScore !== null &&
+      score.awayScore !== undefined;
+
+    const statusText = String(
+      match.status ||
+      match.match_status ||
+      match.state ||
+      ""
+    ).toUpperCase();
+
+    const isFinished =
+      hasScore ||
+      statusText === "FT" ||
+      statusText === "FINISHED" ||
+      statusText === "COMPLETED";
+
     return {
-      date: m.date || m.match_date || (m.fixture && m.fixture.date ? m.fixture.date.slice(0,10) : ""),
-      time: m.time || m.kickoff_time || "TBC",
-      home: m.home || m.home_team || m.team1 || (m.teams && m.teams.home ? m.teams.home.name : ""),
-      away: m.away || m.away_team || m.team2 || (m.teams && m.teams.away ? m.teams.away.name : ""),
-      status: m.status || m.match_status || "UPCOMING",
-      homeScore: m.homeScore ?? m.home_score ?? m.score_home ?? null,
-      awayScore: m.awayScore ?? m.away_score ?? m.score_away ?? null
+      date,
+      time,
+      home,
+      away,
+      status: isFinished ? "FT" : "UPCOMING",
+      homeScore: score.homeScore,
+      awayScore: score.awayScore
     };
   });
 }
 
 async function loadMatches() {
-  if (!API_URL) {
-    return fallbackMatches;
+  for (const url of API_URLS) {
+    try {
+      const response = await fetch(url + "?v=" + Date.now());
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const data = await response.json();
+      const matches = normaliseMatches(data);
+
+      if (matches.length > 0) {
+        return matches;
+      }
+    } catch (error) {
+      // Try next source
+    }
   }
 
-  try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
-    const list = Array.isArray(data) ? data : data.matches || data.data || [];
-    return normaliseApiMatches(list);
-  } catch (e) {
-    return fallbackMatches;
-  }
+  return fallbackMatches;
 }
 
 function render(matches) {
@@ -214,19 +385,16 @@ function render(matches) {
       box.innerHTML += `<div class="match">no matches</div>`;
     } else {
       todaysMatches.forEach(m => {
-        const isFinished =
-          String(m.status).toUpperCase() === "FT" ||
-          String(m.status).toUpperCase() === "FINISHED" ||
-          String(m.status).toUpperCase() === "COMPLETED";
+        const isFinished = String(m.status).toUpperCase() === "FT";
 
-        const scoreLine = isFinished
+        const resultLine = isFinished
           ? `<span class="score">${m.homeScore} - ${m.awayScore}</span><br><span class="ft">FT</span>`
           : `<span class="time">${m.time}</span>`;
 
         box.innerHTML += `
           <div class="match">
-            <span class="team">${m.home}</span> - <span class="team">${m.away}</span><br>
-            ${scoreLine}
+            <span class="team">${m.home} - ${m.away}</span><br>
+            ${resultLine}
           </div>`;
       });
     }
