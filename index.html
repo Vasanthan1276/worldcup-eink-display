@@ -83,35 +83,21 @@ h1 {
 
 <body>
 
-<h1>FIFA World Cup 2026 - This Week</h1>
-<div class="sub">Singapore Time · Mon to Sun · Scores shown after full-time</div>
+<h1>FIFA World Cup 2026 - Next 7 Days</h1>
+<div class="sub">Singapore Time · Rolling 7-day view · Scores shown after full-time</div>
 <div class="week" id="week"></div>
 
 <script>
-/*
-  FREE AUTO-UPDATE SOURCE
-
-  This uses OpenFootball public JSON data.
-  Scores will update automatically only when the source JSON is updated.
-  If the source is unavailable, the page will use fallbackMatches.
-*/
-
 const API_URLS = [
   "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json",
   "https://raw.githubusercontent.com/openfootball/worldcup.json/main/2026/worldcup.json"
 ];
 
-/*
-  Manual fallback data.
-  These are Singapore-time entries.
-  This is only used if the free JSON source cannot be loaded.
-*/
-
 const fallbackMatches = [
-  {date:"2026-06-12", time:"03:00", home:"MEX", away:"RSA", status:"UPCOMING"},
-  {date:"2026-06-12", time:"10:00", home:"KOR", away:"CZE", status:"UPCOMING"},
+  {date:"2026-06-12", time:"03:00", home:"MEX", away:"RSA", status:"FT", homeScore:2, awayScore:0},
+  {date:"2026-06-12", time:"10:00", home:"KOR", away:"CZE", status:"FT", homeScore:2, awayScore:1},
 
-  {date:"2026-06-13", time:"03:00", home:"CAN", away:"IRH", status:"UPCOMING"},
+  {date:"2026-06-13", time:"03:00", home:"CAN", away:"BOS", status:"FT", homeScore:1, awayScore:1},
   {date:"2026-06-13", time:"09:00", home:"USA", away:"PAR", status:"UPCOMING"},
 
   {date:"2026-06-14", time:"03:00", home:"QAT", away:"SUI", status:"UPCOMING"},
@@ -119,17 +105,25 @@ const fallbackMatches = [
   {date:"2026-06-14", time:"09:00", home:"HAI", away:"SCO", status:"UPCOMING"},
   {date:"2026-06-14", time:"12:00", home:"AUS", away:"TUR", status:"UPCOMING"},
 
-  {date:"2026-06-15", time:"11:00", home:"GER", away:"CUW", status:"UPCOMING"},
-  {date:"2026-06-15", time:"03:00", home:"NED", away:"JPN", status:"UPCOMING"},
-  {date:"2026-06-16", time:"12:00", home:"ESP", away:"CPV", status:"UPCOMING"},
+  {date:"2026-06-15", time:"03:00", home:"GER", away:"CUW", status:"UPCOMING"},
+  {date:"2026-06-15", time:"08:00", home:"IVO", away:"ECU", status:"UPCOMING"},
+  {date:"2026-06-15", time:"11:00", home:"NED", away:"JPN", status:"UPCOMING"},
+  {date:"2026-06-15", time:"12:00", home:"SWE", away:"TUN", status:"UPCOMING"},
+
+  {date:"2026-06-16", time:"03:00", home:"ESP", away:"CPV", status:"UPCOMING"},
+  {date:"2026-06-16", time:"08:00", home:"BEL", away:"EGY", status:"UPCOMING"},
+  {date:"2026-06-16", time:"11:00", home:"KSA", away:"URU", status:"UPCOMING"},
+
   {date:"2026-06-17", time:"03:00", home:"FRA", away:"SEN", status:"UPCOMING"},
-  {date:"2026-06-18", time:"10:00", home:"ENG", away:"CRO", status:"UPCOMING"},
-  {date:"2026-06-19", time:"12:00", home:"CZE", away:"RSA", status:"UPCOMING"},
-  {date:"2026-06-20", time:"03:00", home:"USA", away:"AUS", status:"UPCOMING"},
-  {date:"2026-06-21", time:"10:00", home:"NED", away:"SWE", status:"UPCOMING"}
+  {date:"2026-06-17", time:"07:00", home:"ARG", away:"ALG", status:"UPCOMING"},
+  {date:"2026-06-17", time:"10:00", home:"IRQ", away:"NOR", status:"UPCOMING"},
+
+  {date:"2026-06-18", time:"04:00", home:"ENG", away:"CRO", status:"UPCOMING"},
+  {date:"2026-06-18", time:"07:00", home:"GHA", away:"PAN", status:"UPCOMING"},
+  {date:"2026-06-18", time:"10:00", home:"UZB", away:"COL", status:"UPCOMING"}
 ];
 
-const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const weekDiv = document.getElementById("week");
 
 const teamCodeMap = {
@@ -158,25 +152,38 @@ const teamCodeMap = {
   "Scotland":"SCO",
   "Australia":"AUS",
   "Turkey":"TUR",
-  "Curaçao":"CUW",
+  "Türkiye":"TUR",
   "Curacao":"CUW",
+  "Curaçao":"CUW",
   "Cape Verde":"CPV",
   "Senegal":"SEN",
   "Croatia":"CRO",
-  "Sweden":"SWE"
+  "Sweden":"SWE",
+  "Tunisia":"TUN",
+  "Belgium":"BEL",
+  "Egypt":"EGY",
+  "Saudi Arabia":"KSA",
+  "Uruguay":"URU",
+  "Algeria":"ALG",
+  "Norway":"NOR",
+  "Ghana":"GHA",
+  "Panama":"PAN",
+  "Uzbekistan":"UZB",
+  "Colombia":"COL",
+  "Ecuador":"ECU",
+  "Ivory Coast":"IVO",
+  "Côte d'Ivoire":"IVO",
+  "Bosnia and Herzegovina":"BOS"
 };
 
 function getSingaporeDate() {
   return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" }));
 }
 
-function getMonday(d) {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  date.setDate(diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
+function startOfSingaporeToday() {
+  const d = getSingaporeDate();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 function formatDateLocal(date) {
@@ -186,13 +193,7 @@ function formatDateLocal(date) {
   return `${y}-${m}-${d}`;
 }
 
-function toSingaporeDateTime(dateTimeText) {
-  const d = new Date(dateTimeText);
-
-  if (isNaN(d.getTime())) {
-    return { date: "", time: "" };
-  }
-
+function formatSingaporeDateTime(dateObj) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Singapore",
     year: "numeric",
@@ -201,13 +202,67 @@ function toSingaporeDateTime(dateTimeText) {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false
-  }).formatToParts(d);
+  }).formatToParts(dateObj);
 
   const get = type => parts.find(p => p.type === type).value;
 
   return {
     date: `${get("year")}-${get("month")}-${get("day")}`,
     time: `${get("hour")}:${get("minute")}`
+  };
+}
+
+function parseUtcOffsetTime(dateText, timeText) {
+  if (!dateText || !timeText) return null;
+
+  const text = String(timeText).trim();
+
+  const match = text.match(/(\d{1,2}):(\d{2})\s*UTC([+-]\d{1,2})/i);
+
+  if (!match) return null;
+
+  const hour = match[1].padStart(2, "0");
+  const minute = match[2];
+  const offsetNum = parseInt(match[3], 10);
+  const sign = offsetNum >= 0 ? "+" : "-";
+  const absOffset = String(Math.abs(offsetNum)).padStart(2, "0");
+
+  const iso = `${dateText}T${hour}:${minute}:00${sign}${absOffset}:00`;
+  const d = new Date(iso);
+
+  if (isNaN(d.getTime())) return null;
+
+  return formatSingaporeDateTime(d);
+}
+
+function parseAnyDateTime(match) {
+  const possibleDateTime =
+    match.datetime ||
+    match.dateTime ||
+    match.utcDate ||
+    match.kickoff ||
+    match.kickoff_at ||
+    match.fixture?.date;
+
+  if (possibleDateTime) {
+    const d = new Date(possibleDateTime);
+    if (!isNaN(d.getTime())) {
+      return formatSingaporeDateTime(d);
+    }
+  }
+
+  const dateText = match.date || match.match_date || "";
+  const timeText = match.time || match.kickoff_time || "";
+
+  const offsetConverted = parseUtcOffsetTime(dateText, timeText);
+
+  if (offsetConverted) {
+    return offsetConverted;
+  }
+
+  return {
+    date: dateText,
+    time: timeText || "TBC"
   };
 }
 
@@ -257,7 +312,6 @@ function getScore(match) {
 
 function flattenMatches(data) {
   if (Array.isArray(data)) return data;
-
   if (Array.isArray(data.matches)) return data.matches;
 
   if (Array.isArray(data.rounds)) {
@@ -273,25 +327,7 @@ function normaliseMatches(data) {
   const rawMatches = flattenMatches(data);
 
   return rawMatches.map(match => {
-    let date = "";
-    let time = "";
-
-    const possibleDateTime =
-      match.datetime ||
-      match.dateTime ||
-      match.utcDate ||
-      match.kickoff ||
-      match.kickoff_at ||
-      match.fixture?.date;
-
-    if (possibleDateTime) {
-      const sg = toSingaporeDateTime(possibleDateTime);
-      date = sg.date;
-      time = sg.time;
-    } else {
-      date = match.date || match.match_date || "";
-      time = match.time || match.kickoff_time || "TBC";
-    }
+    const sgDateTime = parseAnyDateTime(match);
 
     const home = getTeamCode(
       match.team1 ||
@@ -329,8 +365,8 @@ function normaliseMatches(data) {
       statusText === "COMPLETED";
 
     return {
-      date,
-      time,
+      date: sgDateTime.date,
+      time: sgDateTime.time,
       home,
       away,
       status: isFinished ? "FT" : "UPCOMING",
@@ -345,9 +381,7 @@ async function loadMatches() {
     try {
       const response = await fetch(url + "?v=" + Date.now());
 
-      if (!response.ok) {
-        continue;
-      }
+      if (!response.ok) continue;
 
       const data = await response.json();
       const matches = normaliseMatches(data);
@@ -366,20 +400,21 @@ async function loadMatches() {
 function render(matches) {
   weekDiv.innerHTML = "";
 
-  const todaySG = getSingaporeDate();
-  const monday = getMonday(todaySG);
+  const startDate = startOfSingaporeToday();
 
   for (let i = 0; i < 7; i++) {
-    const current = new Date(monday);
-    current.setDate(monday.getDate() + i);
+    const current = new Date(startDate);
+    current.setDate(startDate.getDate() + i);
 
     const dateStr = formatDateLocal(current);
 
     const box = document.createElement("div");
     box.className = "day";
-    box.innerHTML = `<h2>${days[i]} ${current.getDate()}/${current.getMonth()+1}</h2>`;
+    box.innerHTML = `<h2>${days[current.getDay()]} ${current.getDate()}/${current.getMonth()+1}</h2>`;
 
-    const todaysMatches = matches.filter(m => m.date === dateStr);
+    const todaysMatches = matches
+      .filter(m => m.date === dateStr)
+      .sort((a, b) => String(a.time).localeCompare(String(b.time)));
 
     if (todaysMatches.length === 0) {
       box.innerHTML += `<div class="match">no matches</div>`;
