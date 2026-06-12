@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=800, height=480, initial-scale=1.0">
 <title>World Cup Weekly</title>
+
 <style>
   body {
     margin: 0;
@@ -14,102 +15,227 @@
     color: black;
     overflow: hidden;
   }
+
   h1 {
-    margin: 6px 0;
+    margin: 6px 0 2px 0;
     text-align: center;
-    font-size: 24px;
+    font-size: 23px;
   }
+
+  .sub {
+    text-align: center;
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+
   .week {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 3px;
     padding: 4px;
   }
+
   .day {
     border: 2px solid #39ff14;
     border-radius: 10px;
-    height: 420px;
+    height: 410px;
     overflow: hidden;
-    font-size: 11px;
+    font-size: 10px;
   }
+
   .day h2 {
     margin: 0;
-    padding: 4px;
+    padding: 4px 1px;
     background: #39ff14;
     color: black;
-    font-size: 13px;
+    font-size: 12px;
     text-align: center;
   }
+
   .match {
     padding: 4px 2px;
     text-align: center;
     border-bottom: 1px solid #ddd;
     font-weight: bold;
+    line-height: 1.15;
   }
+
   .team {
     color: red;
   }
+
   .time {
     font-size: 10px;
   }
+
+  .score {
+    font-size: 14px;
+    color: black;
+  }
+
+  .ft {
+    font-size: 9px;
+    color: #444;
+  }
+
+  .error {
+    text-align: center;
+    font-size: 11px;
+    margin-top: 30px;
+  }
 </style>
 </head>
+
 <body>
 
 <h1>FIFA World Cup 2026 - This Week</h1>
+<div class="sub">Singapore Time · Mon to Sun · Scores shown after full-time</div>
 <div class="week" id="week"></div>
 
 <script>
-const matches = [
-  {date:"2026-06-12", time:"03:00", home:"MEX", away:"RSA"},
-  {date:"2026-06-12", time:"10:00", home:"KOR", away:"CZE"},
-  {date:"2026-06-13", time:"03:00", home:"CAN", away:"IRH"},
-  {date:"2026-06-13", time:"09:00", home:"USA", away:"PAR"},
-  {date:"2026-06-14", time:"03:00", home:"QAT", away:"SUI"},
-  {date:"2026-06-14", time:"06:00", home:"BRA", away:"MAR"},
-  {date:"2026-06-14", time:"09:00", home:"HAI", away:"SCO"},
-  {date:"2026-06-14", time:"12:00", home:"AUS", away:"TUR"},
-  {date:"2026-06-15", time:"11:00", home:"GER", away:"CUW"},
-  {date:"2026-06-15", time:"03:00", home:"NED", away:"JPN"}
+/*
+  FREE API SECTION
+
+  Replace API_URL below with the live endpoint from:
+  https://github.com/rezarahiminia/worldcup2026
+
+  The code will still work using the manual fallback data below
+  if the API is unavailable or blocked by CORS.
+*/
+
+const API_URL = ""; 
+// Example only: const API_URL = "https://your-free-worldcup-api-endpoint/matches";
+
+/*
+  Fallback match data.
+  Time below is already entered as Singapore time.
+  For completed games, use:
+  status:"FT", homeScore:1, awayScore:0
+
+  For upcoming games, use:
+  status:"UPCOMING"
+*/
+
+const fallbackMatches = [
+  {date:"2026-06-12", time:"03:00", home:"MEX", away:"RSA", status:"UPCOMING"},
+  {date:"2026-06-12", time:"10:00", home:"KOR", away:"CZE", status:"UPCOMING"},
+  {date:"2026-06-13", time:"03:00", home:"CAN", away:"IRH", status:"UPCOMING"},
+  {date:"2026-06-13", time:"09:00", home:"USA", away:"PAR", status:"UPCOMING"},
+  {date:"2026-06-14", time:"03:00", home:"QAT", away:"SUI", status:"UPCOMING"},
+  {date:"2026-06-14", time:"06:00", home:"BRA", away:"MAR", status:"UPCOMING"},
+  {date:"2026-06-14", time:"09:00", home:"HAI", away:"SCO", status:"UPCOMING"},
+  {date:"2026-06-14", time:"12:00", home:"AUS", away:"TUR", status:"UPCOMING"},
+
+  {date:"2026-06-15", time:"11:00", home:"GER", away:"CUW", status:"UPCOMING"},
+  {date:"2026-06-15", time:"03:00", home:"NED", away:"JPN", status:"UPCOMING"},
+  {date:"2026-06-16", time:"12:00", home:"ESP", away:"CPV", status:"UPCOMING"},
+  {date:"2026-06-17", time:"03:00", home:"FRA", away:"SEN", status:"UPCOMING"},
+  {date:"2026-06-18", time:"10:00", home:"ENG", away:"CRO", status:"UPCOMING"},
+  {date:"2026-06-19", time:"12:00", home:"CZE", away:"RSA", status:"UPCOMING"},
+  {date:"2026-06-20", time:"03:00", home:"USA", away:"AUS", status:"UPCOMING"},
+  {date:"2026-06-21", time:"10:00", home:"NED", away:"SWE", status:"UPCOMING"}
 ];
 
 const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const weekDiv = document.getElementById("week");
 
-function getMonday(d) {
-  d = new Date(d);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
+function getSingaporeDate() {
+  return new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Singapore" }));
 }
 
-const monday = getMonday(new Date());
+function getMonday(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  date.setDate(diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
 
-for (let i = 0; i < 7; i++) {
-  const current = new Date(monday);
-  current.setDate(monday.getDate() + i);
-  const dateStr = current.toISOString().split("T")[0];
+function formatDateLocal(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 
-  const box = document.createElement("div");
-  box.className = "day";
-  box.innerHTML = `<h2>${days[i]} ${current.getDate()}/${current.getMonth()+1}</h2>`;
+function normaliseApiMatches(apiData) {
+  /*
+    This attempts to map common API structures.
+    If the free API uses different field names, adjust this section only.
+  */
+  return apiData.map(m => {
+    return {
+      date: m.date || m.match_date || (m.fixture && m.fixture.date ? m.fixture.date.slice(0,10) : ""),
+      time: m.time || m.kickoff_time || "TBC",
+      home: m.home || m.home_team || m.team1 || (m.teams && m.teams.home ? m.teams.home.name : ""),
+      away: m.away || m.away_team || m.team2 || (m.teams && m.teams.away ? m.teams.away.name : ""),
+      status: m.status || m.match_status || "UPCOMING",
+      homeScore: m.homeScore ?? m.home_score ?? m.score_home ?? null,
+      awayScore: m.awayScore ?? m.away_score ?? m.score_away ?? null
+    };
+  });
+}
 
-  const todaysMatches = matches.filter(m => m.date === dateStr);
-
-  if (todaysMatches.length === 0) {
-    box.innerHTML += `<div class="match">no matches</div>`;
-  } else {
-    todaysMatches.forEach(m => {
-      box.innerHTML += `
-        <div class="match">
-          <span class="team">${m.home}</span> -- <span class="team">${m.away}</span><br>
-          <span class="time">${m.time}</span>
-        </div>`;
-    });
+async function loadMatches() {
+  if (!API_URL) {
+    return fallbackMatches;
   }
 
-  weekDiv.appendChild(box);
+  try {
+    const response = await fetch(API_URL);
+    const data = await response.json();
+    const list = Array.isArray(data) ? data : data.matches || data.data || [];
+    return normaliseApiMatches(list);
+  } catch (e) {
+    return fallbackMatches;
+  }
 }
+
+function render(matches) {
+  weekDiv.innerHTML = "";
+
+  const todaySG = getSingaporeDate();
+  const monday = getMonday(todaySG);
+
+  for (let i = 0; i < 7; i++) {
+    const current = new Date(monday);
+    current.setDate(monday.getDate() + i);
+
+    const dateStr = formatDateLocal(current);
+
+    const box = document.createElement("div");
+    box.className = "day";
+    box.innerHTML = `<h2>${days[i]} ${current.getDate()}/${current.getMonth()+1}</h2>`;
+
+    const todaysMatches = matches.filter(m => m.date === dateStr);
+
+    if (todaysMatches.length === 0) {
+      box.innerHTML += `<div class="match">no matches</div>`;
+    } else {
+      todaysMatches.forEach(m => {
+        const isFinished =
+          String(m.status).toUpperCase() === "FT" ||
+          String(m.status).toUpperCase() === "FINISHED" ||
+          String(m.status).toUpperCase() === "COMPLETED";
+
+        const scoreLine = isFinished
+          ? `<span class="score">${m.homeScore} - ${m.awayScore}</span><br><span class="ft">FT</span>`
+          : `<span class="time">${m.time}</span>`;
+
+        box.innerHTML += `
+          <div class="match">
+            <span class="team">${m.home}</span> - <span class="team">${m.away}</span><br>
+            ${scoreLine}
+          </div>`;
+      });
+    }
+
+    weekDiv.appendChild(box);
+  }
+}
+
+loadMatches().then(render);
 </script>
 
 </body>
