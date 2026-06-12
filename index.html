@@ -83,8 +83,8 @@ h1 {
 
 <body>
 
-<h1>FIFA World Cup 2026 - Next 7 Days</h1>
-<div class="sub">Singapore Time · Rolling 7-day view · Scores shown after full-time</div>
+<h1>FIFA World Cup 2026 - Recent 4 Days + Next 3 Days</h1>
+<div class="sub">Singapore Time · Previous 4 days results · Today + next 2 days schedule · Scores shown after full-time</div>
 <div class="week" id="week"></div>
 
 <script>
@@ -216,7 +216,6 @@ function parseUtcOffsetTime(dateText, timeText) {
   if (!dateText || !timeText) return null;
 
   const text = String(timeText).trim();
-
   const match = text.match(/(\d{1,2}):(\d{2})\s*UTC([+-]\d{1,2})/i);
 
   if (!match) return null;
@@ -400,7 +399,9 @@ async function loadMatches() {
 function render(matches) {
   weekDiv.innerHTML = "";
 
-  const startDate = startOfSingaporeToday();
+  const today = startOfSingaporeToday();
+  const startDate = new Date(today);
+  startDate.setDate(today.getDate() - 4);
 
   for (let i = 0; i < 7; i++) {
     const current = new Date(startDate);
